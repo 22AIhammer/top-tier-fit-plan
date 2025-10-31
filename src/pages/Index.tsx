@@ -3,7 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dumbbell, Apple, Calendar, TrendingUp, Heart, Zap } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Dumbbell, Apple, Calendar, TrendingUp, Heart, Zap, Plus, X } from "lucide-react";
 
 type BodyType = "ectomorph" | "mesomorph" | "endomorph" | null;
 type Goal = "lose" | "gain" | "maintain" | null;
@@ -12,6 +13,8 @@ const Index = () => {
   const [bodyType, setBodyType] = useState<BodyType>(null);
   const [goal, setGoal] = useState<Goal>(null);
   const [showPlan, setShowPlan] = useState(false);
+  const [customQuotes, setCustomQuotes] = useState<string[]>([]);
+  const [newQuote, setNewQuote] = useState("");
 
   const motivationalQuotes = [
     "The only bad workout is the one that didn't happen.",
@@ -80,6 +83,19 @@ const Index = () => {
       setShowPlan(true);
     }
   };
+
+  const handleAddQuote = () => {
+    if (newQuote.trim()) {
+      setCustomQuotes([...customQuotes, newQuote.trim()]);
+      setNewQuote("");
+    }
+  };
+
+  const handleRemoveQuote = (index: number) => {
+    setCustomQuotes(customQuotes.filter((_, i) => i !== index));
+  };
+
+  const allQuotes = [...motivationalQuotes, ...customQuotes];
 
   if (!showPlan) {
     return (
@@ -160,6 +176,49 @@ const Index = () => {
             </CardContent>
           </Card>
 
+          {/* Custom Quotes Section */}
+          <Card className="max-w-4xl mx-auto mb-8">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Zap className="w-5 h-5 text-accent" />
+                Add Your Own Motivational Quotes (Optional)
+              </CardTitle>
+              <CardDescription>Personalize your fitness journey with your favorite quotes</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex gap-2">
+                <Textarea
+                  placeholder="Enter your motivational quote..."
+                  value={newQuote}
+                  onChange={(e) => setNewQuote(e.target.value)}
+                  className="flex-1"
+                  rows={2}
+                />
+                <Button onClick={handleAddQuote} disabled={!newQuote.trim()}>
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </div>
+              {customQuotes.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-sm font-medium">Your Custom Quotes:</p>
+                  {customQuotes.map((quote, index) => (
+                    <div key={index} className="flex items-start gap-2 p-3 bg-accent/5 rounded-lg">
+                      <p className="flex-1 text-sm italic">"{quote}"</p>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleRemoveQuote(index)}
+                        className="h-6 w-6"
+                      >
+                        <X className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           {/* CTA Button */}
           <div className="text-center">
             <Button
@@ -206,7 +265,7 @@ const Index = () => {
         <Card className="mb-8 border-primary/20 bg-gradient-to-r from-primary/5 to-accent/5">
           <CardContent className="py-6">
             <p className="text-center text-lg font-medium italic">
-              "{motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)]}"
+              "{allQuotes[Math.floor(Math.random() * allQuotes.length)]}"
             </p>
           </CardContent>
         </Card>
