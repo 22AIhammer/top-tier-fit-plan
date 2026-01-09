@@ -1,10 +1,37 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { Dumbbell, Apple, Calendar, TrendingUp, Heart, Zap, Plus, X, Flame, Target, Clock, ChevronRight, Sparkles } from "lucide-react";
+import { Dumbbell, Apple, Calendar, TrendingUp, Heart, Zap, Plus, X, Flame, Target, Clock, ChevronRight, Sparkles, Check, Award, Trophy } from "lucide-react";
+
+interface StreakData {
+  lastCheckIn: string | null;
+  currentStreak: number;
+}
+
+const getStreakData = (): StreakData => {
+  const stored = localStorage.getItem("fitpro-streak");
+  if (stored) {
+    return JSON.parse(stored);
+  }
+  return { lastCheckIn: null, currentStreak: 0 };
+};
+
+const saveStreakData = (data: StreakData) => {
+  localStorage.setItem("fitpro-streak", JSON.stringify(data));
+};
+
+const getDateString = (date: Date) => date.toISOString().split("T")[0];
+
+const getMilestoneBadge = (streak: number): { icon: typeof Award; label: string; color: string } | null => {
+  if (streak >= 30) return { icon: Trophy, label: "30-Day Champion", color: "text-yellow-400" };
+  if (streak >= 14) return { icon: Trophy, label: "14-Day Warrior", color: "text-purple-400" };
+  if (streak >= 7) return { icon: Award, label: "7-Day Strong", color: "text-primary" };
+  if (streak >= 3) return { icon: Award, label: "3-Day Starter", color: "text-accent" };
+  return null;
+};
 
 type BodyType = "ectomorph" | "mesomorph" | "endomorph" | null;
 type Goal = "lose" | "gain" | "maintain" | null;
@@ -15,6 +42,38 @@ const Index = () => {
   const [showPlan, setShowPlan] = useState(false);
   const [customQuotes, setCustomQuotes] = useState<string[]>([]);
   const [newQuote, setNewQuote] = useState("");
+  const [streakData, setStreakData] = useState<StreakData>({ lastCheckIn: null, currentStreak: 0 });
+  const [hasCheckedInToday, setHasCheckedInToday] = useState(false);
+
+  useEffect(() => {
+    const data = getStreakData();
+    setStreakData(data);
+    const today = getDateString(new Date());
+    setHasCheckedInToday(data.lastCheckIn === today);
+  }, []);
+
+  const handleCheckIn = () => {
+    const today = getDateString(new Date());
+    const yesterday = getDateString(new Date(Date.now() - 86400000));
+    
+    let newStreak = 1;
+    if (streakData.lastCheckIn === yesterday) {
+      newStreak = streakData.currentStreak + 1;
+    } else if (streakData.lastCheckIn === today) {
+      return; // Already checked in today
+    }
+    
+    const newData: StreakData = {
+      lastCheckIn: today,
+      currentStreak: newStreak,
+    };
+    
+    saveStreakData(newData);
+    setStreakData(newData);
+    setHasCheckedInToday(true);
+  };
+
+  const milestoneBadge = getMilestoneBadge(streakData.currentStreak);
 
   const motivationalQuotes = [
     "The only bad workout is the one that didn't happen.",
@@ -345,13 +404,48 @@ const Index = () => {
           <div className="relative bg-gradient-to-r from-primary/10 via-primary/5 to-accent/10 p-8">
             <div className="absolute top-0 right-0 w-40 h-40 bg-primary/10 rounded-full blur-3xl" />
             <div className="relative">
-              <div className="flex items-center gap-2 text-sm text-primary font-semibold mb-3">
-                <div className="w-2 h-2 rounded-full bg-primary pulse-glow" />
-                Quote of the Day
+              <div className="flex flex-wrap items-center gap-3 mb-3">
+                <div className="flex items-center gap-2 text-sm text-primary font-semibold">
+                  <div className="w-2 h-2 rounded-full bg-primary pulse-glow" />
+                  Quote of the Day
+                </div>
+                {streakData.currentStreak > 0 && (
+                  <Badge className="px-3 py-1 text-sm font-bold bg-gradient-to-r from-orange-500 to-amber-500 text-white border-0">
+                    <Flame className="w-4 h-4 mr-1" />
+                    {streakData.currentStreak}-day streak
+                  </Badge>
+                )}
+                {milestoneBadge && (
+                  <Badge className={`px-3 py-1 text-sm font-bold bg-muted/50 ${milestoneBadge.color} border-current/20`}>
+                    <milestoneBadge.icon className="w-4 h-4 mr-1" />
+                    {milestoneBadge.label}
+                  </Badge>
+                )}
               </div>
-              <p className="text-xl md:text-2xl font-medium text-foreground leading-relaxed max-w-3xl">
+              <p className="text-xl md:text-2xl font-medium text-foreground leading-relaxed max-w-3xl mb-6">
                 "{dailyQuote}"
               </p>
+              <Button
+                onClick={handleCheckIn}
+                disabled={hasCheckedInToday}
+                className={`font-semibold transition-all duration-300 ${
+                  hasCheckedInToday 
+                    ? 'bg-primary/20 text-primary cursor-default' 
+                    : 'bg-gradient-to-r from-primary to-emerald-600 hover:from-primary/90 hover:to-emerald-600/90 shadow-glow'
+                }`}
+              >
+                {hasCheckedInToday ? (
+                  <>
+                    <Check className="w-4 h-4 mr-2" />
+                    Checked In Today
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Check In for Today
+                  </>
+                )}
+              </Button>
             </div>
           </div>
         </Card>
