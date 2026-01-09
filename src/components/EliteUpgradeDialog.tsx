@@ -18,9 +18,9 @@ interface EliteUpgradeDialogProps {
 }
 
 const eliteFeatures = [
-  { icon: History, label: "Full Streak History", description: "See how far you've come and stay motivated" },
-  { icon: Trophy, label: "Milestone Celebrations", description: "Celebrate wins at 3, 7, 14 & 30 days with style" },
-  { icon: Quote, label: "Premium Motivation", description: "Handpicked quotes to fuel your best self" },
+  { icon: History, label: "Your Full Journey", description: "See every step you've taken—proof of who you're becoming" },
+  { icon: Trophy, label: "Milestone Celebrations", description: "Celebrate wins at 3, 7, 14 & 30 days like a champion" },
+  { icon: Quote, label: "Elite Mindset Quotes", description: "Fuel your transformation with handpicked wisdom" },
 ];
 
 export const EliteUpgradeDialog = ({
@@ -32,22 +32,22 @@ export const EliteUpgradeDialog = ({
 }: EliteUpgradeDialogProps) => {
   const getTitle = () => {
     if (trigger === "milestone") {
-      return "You're Building Something Amazing 🔥";
+      return "You're Becoming Someone New 🔥";
     }
     if (trigger === "feature" && featureName) {
-      return `Unlock ${featureName}`;
+      return `Unlock Your ${featureName}`;
     }
-    return "Build Unstoppable Habits";
+    return "Unlock Elite Consistency";
   };
 
   const getDescription = () => {
     if (trigger === "milestone") {
-      return "You just proved you can show up. Elite helps you keep showing up—with the tools to track progress and celebrate every win.";
+      return "This milestone proves who you're becoming. Elite gives you the tools to see your journey, celebrate progress, and stay unstoppable.";
     }
     if (trigger === "feature") {
-      return `Ready to level up? ${featureName} is part of Elite—designed to help you stay consistent and motivated.`;
+      return `Your progress deserves to be seen. ${featureName} is part of Elite—designed for people serious about their transformation.`;
     }
-    return "Elite gives you the insights and motivation to turn daily check-ins into lasting habits.";
+    return "Elite is for people who show up. Track your journey, celebrate milestones, and see the person you're becoming.";
   };
 
   return (
@@ -89,7 +89,7 @@ export const EliteUpgradeDialog = ({
         </div>
 
         <p className="text-center text-xs text-muted-foreground italic mb-2">
-          "Small steps, celebrated often, become giant leaps."
+          "Every day you show up, you become more of who you want to be."
         </p>
 
         <DialogFooter className="flex-col gap-2 sm:flex-col">

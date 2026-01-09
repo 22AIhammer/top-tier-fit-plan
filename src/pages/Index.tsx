@@ -12,6 +12,8 @@ import { useEliteTier } from "@/hooks/use-elite-tier";
 import { EliteUpgradeDialog } from "@/components/EliteUpgradeDialog";
 import { EliteBadge } from "@/components/EliteBadge";
 import { LockedFeature } from "@/components/LockedFeature";
+import { StreakCalendarPreview } from "@/components/StreakCalendarPreview";
+import { MilestoneTeaser } from "@/components/MilestoneTeaser";
 interface StreakData {
   lastCheckIn: string | null;
   currentStreak: number;
@@ -69,6 +71,7 @@ const Index = () => {
   const [upgradeDialogTrigger, setUpgradeDialogTrigger] = useState<"milestone" | "feature" | "general">("general");
   const [lockedFeatureName, setLockedFeatureName] = useState("");
   const [pendingMilestoneCelebration, setPendingMilestoneCelebration] = useState(false);
+  const [showMilestoneTeaser, setShowMilestoneTeaser] = useState<number | null>(null);
 
   const { isElite, upgradeToElite } = useEliteTier();
 
@@ -132,7 +135,8 @@ const Index = () => {
         setPendingMilestoneCelebration(true);
         setTimeout(() => setPendingMilestoneCelebration(false), 3000);
       } else {
-        handleUpgradePrompt("milestone");
+        // Show milestone teaser for free users
+        setShowMilestoneTeaser(newStreak);
       }
     }
   };
@@ -579,7 +583,7 @@ const Index = () => {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => handleUpgradePrompt("feature", "Bonus Motivation Quotes")}
+                    onClick={() => handleUpgradePrompt("feature", "Elite Mindset Quotes")}
                     className="text-sm text-muted-foreground hover:text-amber-500"
                   >
                     <Lock className="w-4 h-4 mr-1" />
@@ -588,6 +592,28 @@ const Index = () => {
                   </Button>
                 )}
               </div>
+
+              {/* Milestone Teaser for Free Users */}
+              {showMilestoneTeaser && !isElite && (
+                <div className="mt-4">
+                  <MilestoneTeaser
+                    milestone={showMilestoneTeaser}
+                    onUpgradeClick={() => {
+                      setShowMilestoneTeaser(null);
+                      handleUpgradePrompt("milestone");
+                    }}
+                  />
+                </div>
+              )}
+
+              {/* Streak Calendar Preview for Free Users */}
+              {!isElite && streakData.streakHistory.length > 0 && (
+                <StreakCalendarPreview
+                  streakHistory={streakData.streakHistory}
+                  currentStreak={streakData.currentStreak}
+                  onUpgradeClick={() => handleUpgradePrompt("feature", "Streak Calendar")}
+                />
+              )}
 
               {/* Reminder Settings Panel */}
               {showReminderSettings && isSupported && (
