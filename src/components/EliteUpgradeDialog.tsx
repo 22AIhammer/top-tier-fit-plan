@@ -18,9 +18,9 @@ interface EliteUpgradeDialogProps {
 }
 
 const eliteFeatures = [
-  { icon: History, label: "Full Streak History", description: "Track your journey over time" },
-  { icon: Trophy, label: "Milestone Celebrations", description: "Animated celebrations at 3, 7, 14, 30 days" },
-  { icon: Quote, label: "Bonus Motivation Quotes", description: "Exclusive daily inspiration" },
+  { icon: History, label: "Full Streak History", description: "See how far you've come and stay motivated" },
+  { icon: Trophy, label: "Milestone Celebrations", description: "Celebrate wins at 3, 7, 14 & 30 days with style" },
+  { icon: Quote, label: "Premium Motivation", description: "Handpicked quotes to fuel your best self" },
 ];
 
 export const EliteUpgradeDialog = ({
@@ -32,22 +32,22 @@ export const EliteUpgradeDialog = ({
 }: EliteUpgradeDialogProps) => {
   const getTitle = () => {
     if (trigger === "milestone") {
-      return "Celebrate Your Achievement! 🎉";
+      return "You're Building Something Amazing 🔥";
     }
     if (trigger === "feature" && featureName) {
       return `Unlock ${featureName}`;
     }
-    return "Upgrade to Elite";
+    return "Build Unstoppable Habits";
   };
 
   const getDescription = () => {
     if (trigger === "milestone") {
-      return "You've hit a milestone! Upgrade to Elite to unlock animated celebrations and track your streak history.";
+      return "You just proved you can show up. Elite helps you keep showing up—with the tools to track progress and celebrate every win.";
     }
     if (trigger === "feature") {
-      return `This feature is part of the Elite experience. Upgrade to unlock ${featureName?.toLowerCase()} and other premium benefits.`;
+      return `Ready to level up? ${featureName} is part of Elite—designed to help you stay consistent and motivated.`;
     }
-    return "Take your fitness journey to the next level with exclusive Elite features.";
+    return "Elite gives you the insights and motivation to turn daily check-ins into lasting habits.";
   };
 
   return (
@@ -88,6 +88,10 @@ export const EliteUpgradeDialog = ({
           ))}
         </div>
 
+        <p className="text-center text-xs text-muted-foreground italic mb-2">
+          "Small steps, celebrated often, become giant leaps."
+        </p>
+
         <DialogFooter className="flex-col gap-2 sm:flex-col">
           <Button
             onClick={() => {
@@ -97,14 +101,14 @@ export const EliteUpgradeDialog = ({
             className="w-full bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-600 hover:to-yellow-500 text-white font-bold py-6 text-lg shadow-lg"
           >
             <Sparkles className="w-5 h-5 mr-2" />
-            Upgrade to Elite
+            Join Elite
           </Button>
           <Button
             variant="ghost"
             onClick={() => onOpenChange(false)}
-            className="w-full text-muted-foreground"
+            className="w-full text-muted-foreground hover:text-foreground"
           >
-            Maybe Later
+            Not right now
           </Button>
         </DialogFooter>
       </DialogContent>

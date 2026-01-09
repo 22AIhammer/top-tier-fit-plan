@@ -31,16 +31,19 @@ export const LockedFeature = ({
   return (
     <div className="relative">
       <div className="opacity-30 pointer-events-none blur-[1px]">{children}</div>
-      <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/50 backdrop-blur-sm rounded-xl">
-        <Lock className="w-6 h-6 text-muted-foreground mb-2" />
-        <p className="text-sm text-muted-foreground mb-3">{featureName}</p>
+      <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/60 backdrop-blur-sm rounded-xl p-4">
+        <div className="bg-gradient-to-r from-amber-500/10 to-yellow-400/10 p-3 rounded-full mb-3">
+          <Lock className="w-5 h-5 text-amber-500" />
+        </div>
+        <p className="font-medium text-sm text-foreground mb-1">{featureName}</p>
+        <p className="text-xs text-muted-foreground mb-3 text-center">Part of the Elite experience</p>
         <Button
           size="sm"
           onClick={onUpgradeClick}
-          className="bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-600 hover:to-yellow-500 text-white font-semibold"
+          className="bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-600 hover:to-yellow-500 text-white font-semibold shadow-md"
         >
           <Crown className="w-4 h-4 mr-1" />
-          Unlock Elite
+          Go Elite
         </Button>
       </div>
     </div>
