@@ -4,7 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { Dumbbell, Apple, Calendar, TrendingUp, Heart, Zap, Plus, X, Flame, Target, Clock, ChevronRight, Sparkles, Check, Award, Trophy } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
+import { Dumbbell, Apple, Calendar, TrendingUp, Heart, Zap, Plus, X, Flame, Target, Clock, ChevronRight, Sparkles, Check, Award, Trophy, Bell, BellOff } from "lucide-react";
+import { useNotificationReminder } from "@/hooks/use-notification-reminder";
 
 interface StreakData {
   lastCheckIn: string | null;
@@ -44,6 +47,17 @@ const Index = () => {
   const [newQuote, setNewQuote] = useState("");
   const [streakData, setStreakData] = useState<StreakData>({ lastCheckIn: null, currentStreak: 0 });
   const [hasCheckedInToday, setHasCheckedInToday] = useState(false);
+  const [showReminderSettings, setShowReminderSettings] = useState(false);
+
+  const {
+    settings: reminderSettings,
+    permissionStatus,
+    enableReminders,
+    disableReminders,
+    updateReminderTime,
+    isSupported,
+    canEnable,
+  } = useNotificationReminder();
 
   useEffect(() => {
     const data = getStreakData();
@@ -51,6 +65,14 @@ const Index = () => {
     const today = getDateString(new Date());
     setHasCheckedInToday(data.lastCheckIn === today);
   }, []);
+
+  const handleToggleReminder = async () => {
+    if (reminderSettings.enabled) {
+      disableReminders();
+    } else {
+      await enableReminders(reminderSettings.time);
+    }
+  };
 
   const handleCheckIn = () => {
     const today = getDateString(new Date());
@@ -425,27 +447,92 @@ const Index = () => {
               <p className="text-xl md:text-2xl font-medium text-foreground leading-relaxed max-w-3xl mb-6">
                 "{dailyQuote}"
               </p>
-              <Button
-                onClick={handleCheckIn}
-                disabled={hasCheckedInToday}
-                className={`font-semibold transition-all duration-300 ${
-                  hasCheckedInToday 
-                    ? 'bg-primary/20 text-primary cursor-default' 
-                    : 'bg-gradient-to-r from-primary to-emerald-600 hover:from-primary/90 hover:to-emerald-600/90 shadow-glow'
-                }`}
-              >
-                {hasCheckedInToday ? (
-                  <>
-                    <Check className="w-4 h-4 mr-2" />
-                    Checked In Today
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-4 h-4 mr-2" />
-                    Check In for Today
-                  </>
+              <div className="flex flex-wrap items-center gap-3">
+                <Button
+                  onClick={handleCheckIn}
+                  disabled={hasCheckedInToday}
+                  className={`font-semibold transition-all duration-300 ${
+                    hasCheckedInToday 
+                      ? 'bg-primary/20 text-primary cursor-default' 
+                      : 'bg-gradient-to-r from-primary to-emerald-600 hover:from-primary/90 hover:to-emerald-600/90 shadow-glow'
+                  }`}
+                >
+                  {hasCheckedInToday ? (
+                    <>
+                      <Check className="w-4 h-4 mr-2" />
+                      Checked In Today
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Check In for Today
+                    </>
+                  )}
+                </Button>
+
+                {isSupported && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowReminderSettings(!showReminderSettings)}
+                    className={`text-sm ${reminderSettings.enabled ? 'text-primary' : 'text-muted-foreground'}`}
+                  >
+                    {reminderSettings.enabled ? (
+                      <>
+                        <Bell className="w-4 h-4 mr-2" />
+                        Reminders On
+                      </>
+                    ) : (
+                      <>
+                        <BellOff className="w-4 h-4 mr-2" />
+                        Set Reminder
+                      </>
+                    )}
+                  </Button>
                 )}
-              </Button>
+              </div>
+
+              {/* Reminder Settings Panel */}
+              {showReminderSettings && isSupported && (
+                <div className="mt-4 p-4 bg-muted/30 rounded-xl border border-border/50">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                    <div className="flex items-center gap-3 flex-1">
+                      <Switch
+                        checked={reminderSettings.enabled}
+                        onCheckedChange={handleToggleReminder}
+                        disabled={!canEnable}
+                      />
+                      <div>
+                        <p className="text-sm font-medium text-foreground">Daily Reminder</p>
+                        <p className="text-xs text-muted-foreground">
+                          {permissionStatus === "denied" 
+                            ? "Notifications blocked in browser settings" 
+                            : "Get a friendly nudge to protect your streak"}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {reminderSettings.enabled && (
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-muted-foreground" />
+                        <Input
+                          type="time"
+                          value={reminderSettings.time}
+                          onChange={(e) => updateReminderTime(e.target.value)}
+                          className="w-28 h-9 bg-background/50 border-border/50 text-sm"
+                        />
+                      </div>
+                    )}
+                  </div>
+                  
+                  {reminderSettings.enabled && (
+                    <p className="mt-3 text-xs text-muted-foreground flex items-center gap-1">
+                      <Bell className="w-3 h-3" />
+                      You'll receive a reminder at {reminderSettings.time} if you haven't checked in yet
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </Card>
