@@ -6,20 +6,25 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
-import { Dumbbell, Apple, Calendar, TrendingUp, Heart, Zap, Plus, X, Flame, Target, Clock, ChevronRight, Sparkles, Check, Award, Trophy, Bell, BellOff } from "lucide-react";
+import { Dumbbell, Apple, Calendar, TrendingUp, Heart, Zap, Plus, X, Flame, Target, Clock, ChevronRight, Sparkles, Check, Award, Trophy, Bell, BellOff, Crown, Lock, History } from "lucide-react";
 import { useNotificationReminder } from "@/hooks/use-notification-reminder";
-
+import { useEliteTier } from "@/hooks/use-elite-tier";
+import { EliteUpgradeDialog } from "@/components/EliteUpgradeDialog";
+import { EliteBadge } from "@/components/EliteBadge";
+import { LockedFeature } from "@/components/LockedFeature";
 interface StreakData {
   lastCheckIn: string | null;
   currentStreak: number;
+  streakHistory: { date: string; streak: number }[];
 }
 
 const getStreakData = (): StreakData => {
   const stored = localStorage.getItem("fitpro-streak");
   if (stored) {
-    return JSON.parse(stored);
+    const parsed = JSON.parse(stored);
+    return { ...parsed, streakHistory: parsed.streakHistory || [] };
   }
-  return { lastCheckIn: null, currentStreak: 0 };
+  return { lastCheckIn: null, currentStreak: 0, streakHistory: [] };
 };
 
 const saveStreakData = (data: StreakData) => {
@@ -27,6 +32,18 @@ const saveStreakData = (data: StreakData) => {
 };
 
 const getDateString = (date: Date) => date.toISOString().split("T")[0];
+
+// Bonus Elite quotes
+const eliteMotivationalQuotes = [
+  "Champions are made when no one is watching.",
+  "The body achieves what the mind believes.",
+  "Greatness is earned, never given.",
+  "Your potential is limitless – unlock it.",
+  "Every rep counts. Every day matters.",
+  "Rise above your limits.",
+  "Discipline is the bridge between goals and accomplishment.",
+  "Make yourself proud.",
+];
 
 const getMilestoneBadge = (streak: number): { icon: typeof Award; label: string; color: string } | null => {
   if (streak >= 30) return { icon: Trophy, label: "30-Day Champion", color: "text-yellow-400" };
@@ -45,9 +62,15 @@ const Index = () => {
   const [showPlan, setShowPlan] = useState(false);
   const [customQuotes, setCustomQuotes] = useState<string[]>([]);
   const [newQuote, setNewQuote] = useState("");
-  const [streakData, setStreakData] = useState<StreakData>({ lastCheckIn: null, currentStreak: 0 });
+  const [streakData, setStreakData] = useState<StreakData>({ lastCheckIn: null, currentStreak: 0, streakHistory: [] });
   const [hasCheckedInToday, setHasCheckedInToday] = useState(false);
   const [showReminderSettings, setShowReminderSettings] = useState(false);
+  const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
+  const [upgradeDialogTrigger, setUpgradeDialogTrigger] = useState<"milestone" | "feature" | "general">("general");
+  const [lockedFeatureName, setLockedFeatureName] = useState("");
+  const [pendingMilestoneCelebration, setPendingMilestoneCelebration] = useState(false);
+
+  const { isElite, upgradeToElite } = useEliteTier();
 
   const {
     settings: reminderSettings,
@@ -74,6 +97,12 @@ const Index = () => {
     }
   };
 
+  const handleUpgradePrompt = (trigger: "milestone" | "feature" | "general", featureName?: string) => {
+    setUpgradeDialogTrigger(trigger);
+    setLockedFeatureName(featureName || "");
+    setShowUpgradeDialog(true);
+  };
+
   const handleCheckIn = () => {
     const today = getDateString(new Date());
     const yesterday = getDateString(new Date(Date.now() - 86400000));
@@ -85,14 +114,27 @@ const Index = () => {
       return; // Already checked in today
     }
     
+    const newHistoryEntry = { date: today, streak: newStreak };
     const newData: StreakData = {
       lastCheckIn: today,
       currentStreak: newStreak,
+      streakHistory: [...streakData.streakHistory, newHistoryEntry],
     };
     
     saveStreakData(newData);
     setStreakData(newData);
     setHasCheckedInToday(true);
+
+    // Check for milestone and show upgrade prompt if not Elite
+    const milestones = [3, 7, 14, 30];
+    if (milestones.includes(newStreak)) {
+      if (isElite) {
+        setPendingMilestoneCelebration(true);
+        setTimeout(() => setPendingMilestoneCelebration(false), 3000);
+      } else {
+        handleUpgradePrompt("milestone");
+      }
+    }
   };
 
   const milestoneBadge = getMilestoneBadge(streakData.currentStreak);
@@ -179,7 +221,10 @@ const Index = () => {
     setCustomQuotes(customQuotes.filter((_, i) => i !== index));
   };
 
-  const allQuotes = [...motivationalQuotes, ...customQuotes];
+  // Include Elite bonus quotes only for Elite members
+  const allQuotes = isElite 
+    ? [...motivationalQuotes, ...customQuotes, ...eliteMotivationalQuotes]
+    : [...motivationalQuotes, ...customQuotes];
 
   const dailyQuote = useMemo(() => {
     const today = new Date();
@@ -425,23 +470,43 @@ const Index = () => {
         <Card className="mb-10 overflow-hidden border-0 shadow-premium">
           <div className="relative bg-gradient-to-r from-primary/10 via-primary/5 to-accent/10 p-8">
             <div className="absolute top-0 right-0 w-40 h-40 bg-primary/10 rounded-full blur-3xl" />
-            <div className="relative">
-              <div className="flex flex-wrap items-center gap-3 mb-3">
-                <div className="flex items-center gap-2 text-sm text-primary font-semibold">
-                  <div className="w-2 h-2 rounded-full bg-primary pulse-glow" />
-                  Quote of the Day
+            
+            {/* Milestone Celebration Animation (Elite Only) */}
+            {pendingMilestoneCelebration && isElite && (
+              <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-10 animate-in fade-in duration-300">
+                <div className="text-center">
+                  <div className="relative inline-block mb-4">
+                    <div className="absolute inset-0 bg-gradient-to-r from-amber-500 to-yellow-400 blur-2xl opacity-50 rounded-full animate-pulse" />
+                    <Trophy className="w-20 h-20 text-amber-500 relative animate-bounce" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-foreground mb-2">🎉 Milestone Reached!</h3>
+                  <p className="text-lg text-gradient">{streakData.currentStreak}-Day Streak!</p>
                 </div>
-                {streakData.currentStreak > 0 && (
-                  <Badge className="px-3 py-1 text-sm font-bold bg-gradient-to-r from-orange-500 to-amber-500 text-white border-0">
-                    <Flame className="w-4 h-4 mr-1" />
-                    {streakData.currentStreak}-day streak
-                  </Badge>
-                )}
-                {milestoneBadge && (
-                  <Badge className={`px-3 py-1 text-sm font-bold bg-muted/50 ${milestoneBadge.color} border-current/20`}>
-                    <milestoneBadge.icon className="w-4 h-4 mr-1" />
-                    {milestoneBadge.label}
-                  </Badge>
+              </div>
+            )}
+            
+            <div className="relative">
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="flex items-center gap-2 text-sm text-primary font-semibold">
+                    <div className="w-2 h-2 rounded-full bg-primary pulse-glow" />
+                    Quote of the Day
+                  </div>
+                  {streakData.currentStreak > 0 && (
+                    <Badge className="px-3 py-1 text-sm font-bold bg-gradient-to-r from-orange-500 to-amber-500 text-white border-0">
+                      <Flame className="w-4 h-4 mr-1" />
+                      {streakData.currentStreak}-day streak
+                    </Badge>
+                  )}
+                  {milestoneBadge && isElite && (
+                    <Badge className={`px-3 py-1 text-sm font-bold bg-muted/50 ${milestoneBadge.color} border-current/20`}>
+                      <milestoneBadge.icon className="w-4 h-4 mr-1" />
+                      {milestoneBadge.label}
+                    </Badge>
+                  )}
+                </div>
+                {isElite && (
+                  <EliteBadge variant="small" />
                 )}
               </div>
               <p className="text-xl md:text-2xl font-medium text-foreground leading-relaxed max-w-3xl mb-6">
@@ -490,6 +555,38 @@ const Index = () => {
                     )}
                   </Button>
                 )}
+
+                {/* Streak History - Locked for non-Elite */}
+                {isElite ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-sm text-muted-foreground hover:text-foreground"
+                  >
+                    <History className="w-4 h-4 mr-2" />
+                    View History ({streakData.streakHistory.length} days)
+                  </Button>
+                ) : (
+                  <LockedFeature
+                    featureName="Streak History"
+                    onUpgradeClick={() => handleUpgradePrompt("feature", "Streak History")}
+                    variant="inline"
+                  />
+                )}
+
+                {/* Bonus Quotes - Upgrade prompt for non-Elite */}
+                {!isElite && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleUpgradePrompt("feature", "Bonus Motivation Quotes")}
+                    className="text-sm text-muted-foreground hover:text-amber-500"
+                  >
+                    <Lock className="w-4 h-4 mr-1" />
+                    +8 Elite Quotes
+                    <Crown className="w-3 h-3 ml-1 text-amber-500" />
+                  </Button>
+                )}
               </div>
 
               {/* Reminder Settings Panel */}
@@ -536,6 +633,15 @@ const Index = () => {
             </div>
           </div>
         </Card>
+
+        {/* Elite Upgrade Dialog */}
+        <EliteUpgradeDialog
+          open={showUpgradeDialog}
+          onOpenChange={setShowUpgradeDialog}
+          onUpgrade={upgradeToElite}
+          trigger={upgradeDialogTrigger}
+          featureName={lockedFeatureName}
+        />
 
         <Tabs defaultValue="nutrition" className="space-y-8">
           <TabsList className="w-full h-auto p-1.5 bg-muted/50 rounded-2xl grid grid-cols-3 gap-1">
