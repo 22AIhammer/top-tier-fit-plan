@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -96,6 +96,16 @@ const Index = () => {
   };
 
   const allQuotes = [...motivationalQuotes, ...customQuotes];
+
+  // Daily Quote of the Day - same quote for the entire day
+  const dailyQuote = useMemo(() => {
+    const today = new Date();
+    const dayOfYear = Math.floor(
+      (today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24)
+    );
+    const quoteIndex = dayOfYear % allQuotes.length;
+    return allQuotes[quoteIndex];
+  }, [allQuotes]);
 
   if (!showPlan) {
     return (
@@ -261,11 +271,17 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Motivational Quote */}
+        {/* Daily Motivation Engine - Quote of the Day */}
         <Card className="mb-8 border-primary/20 bg-gradient-to-r from-primary/5 to-accent/5">
-          <CardContent className="py-6">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+              <Zap className="w-4 h-4 text-primary" />
+              <span>Quote of the Day</span>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-0 pb-6">
             <p className="text-center text-lg font-medium italic">
-              "{allQuotes[Math.floor(Math.random() * allQuotes.length)]}"
+              "{dailyQuote}"
             </p>
           </CardContent>
         </Card>
