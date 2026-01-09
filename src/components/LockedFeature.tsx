@@ -36,14 +36,14 @@ export const LockedFeature = ({
           <Lock className="w-5 h-5 text-amber-500" />
         </div>
         <p className="font-medium text-sm text-foreground mb-1">{featureName}</p>
-        <p className="text-xs text-muted-foreground mb-3 text-center">Part of the Elite experience</p>
+        <p className="text-xs text-muted-foreground mb-3 text-center">For people serious about progress</p>
         <Button
           size="sm"
           onClick={onUpgradeClick}
           className="bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-600 hover:to-yellow-500 text-white font-semibold shadow-md"
         >
           <Crown className="w-4 h-4 mr-1" />
-          Go Elite
+          See My Journey
         </Button>
       </div>
     </div>
